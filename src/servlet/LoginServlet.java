@@ -1,30 +1,34 @@
 package servlet;
 
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import model.User;
 import dao.UserDAO;
+import model.User;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.sql.SQLException;
 
+@WebServlet("/login")
 public class LoginServlet extends HttpServlet {
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
+    private final UserDAO userDAO = new UserDAO();
 
-        UserDAO userDAO = new UserDAOImpl();
-        User user = userDAO.getUserByUsername(username);
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String username = req.getParameter("username");
+        String password = req.getParameter("password");
 
-        if (user != null && user.getPassword().equals(password)) {
-            HttpSession session = request.getSession();
-            session.setAttribute("user", user);
-            session.setAttribute("userRole", user.getRole());
-            response.sendRedirect("dashboard.jsp");
-        } else {
-            response.sendRedirect("index.jsp?error=1");
+        try {
+            User u = userDAO.findByUsername(username);
+            if (u != null && u.getPassword().equals(password)) { // NOTE: demo only
+                HttpSession s = req.getSession(true);
+                s.setAttribute("user", u);
+                resp.sendRedirect("dashboard.jsp");
+            } else {
+                req.setAttribute("error", "Invalid credentials");
+                req.getRequestDispatcher("index.jsp").forward(req, resp);
+            }
+        } catch (SQLException e) {
+            throw new ServletException(e);
         }
     }
 }

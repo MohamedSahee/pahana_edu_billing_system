@@ -1,94 +1,75 @@
-<!DOCTYPE html>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page import="java.util.List, model.User" %>
+<%
+    List<User> users = (List<User>) request.getAttribute("users");
+%>
 <html>
 <head>
-    <title>Manage Users - Online Billing System</title>
-    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <title>Manage Users</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: auto; }
+        th, td { padding: 8px; border: 1px solid #ccc; }
+        th { background: #f4f4f4; }
+        form { display: inline; }
+    </style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <h1>Online Billing System</h1>
-        <nav>
-            <a href="dashboard.jsp">Dashboard</a>
-            <a href="addCustomer.jsp">Add Customer</a>
-            <a href="manageItems.jsp">Manage Items</a>
-            <a href="bill.jsp">Generate Bill</a>
-            <a href="UserManagementServlet">Manage Users</a>
-            <a href="ViewAccountServlet">My Account</a>
-            <a href="HelpServlet">Help</a>
-            <a href="LogoutServlet">Logout</a>
-        </nav>
-    </header>
+<h2 style="text-align:center;">Manage Users</h2>
 
-    <main>
-        <h2>Manage Users</h2>
+<!-- Add User Form -->
+<form method="post" action="ManageUsersServlet" style="text-align:center;">
+    <input type="hidden" name="action" value="add">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <select name="role">
+        <option value="Admin">Admin</option>
+        <option value="Cashier">Cashier</option>
+    </select>
+    <button type="submit">Add User</button>
+</form>
 
-        <!-- Add User Form -->
-        <div class="add-user-form">
-            <h3>Add New User</h3>
-            <form action="UserManagementServlet" method="post">
-                <input type="hidden" name="action" value="add">
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="role">Role:</label>
-                    <select id="role" name="role" required>
-                        <option value="admin">Admin</option>
-                        <option value="staff">Staff</option>
-                    </select>
-                </div>
-                <button type="submit">Add User</button>
+<!-- Users Table -->
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Actions</th>
+    </tr>
+    <%
+        if (users != null) {
+            for (User u : users) {
+    %>
+    <tr>
+        <td><%= u.getId() %></td>
+        <td><%= u.getUsername() %></td>
+        <td><%= u.getRole() %></td>
+        <td>
+            <!-- Edit Form -->
+            <form method="post" action="ManageUsersServlet">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id" value="<%= u.getId() %>">
+                <input type="text" name="username" value="<%= u.getUsername() %>">
+                <select name="role">
+                    <option value="Admin" <%= "Admin".equals(u.getRole()) ? "selected" : "" %>>Admin</option>
+                    <option value="Cashier" <%= "Cashier".equals(u.getRole()) ? "selected" : "" %>>Cashier</option>
+                </select>
+                <button type="submit">Update</button>
             </form>
-        </div>
 
-        <!-- Users List -->
-        <div class="users-list">
-            <h3>Existing Users</h3>
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <%
-                    java.util.List<User> users = (java.util.List<User>) request.getAttribute("users");
-                    if (users != null) {
-                        for (User user : users) {
-                %>
-                <tr>
-                    <td><%= user.getId() %></td>
-                    <td><%= user.getUsername() %></td>
-                    <td><%= user.getRole() %></td>
-                    <td>
-                        <form action="UserManagementServlet" method="post" style="display:inline;">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<%= user.getId() %>">
-                            <button type="submit" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                <%
-                        }
-                    }
-                %>
-                </tbody>
-            </table>
-        </div>
+            <!-- Delete Form -->
+            <form method="post" action="ManageUsersServlet">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="<%= u.getId() %>">
+                <button type="submit" onclick="return confirm('Delete user?')">Delete</button>
+            </form>
+        </td>
+    </tr>
+    <%
+            }
+        }
+    %>
+</table>
 
-        <% if (request.getParameter("success") != null) { %>
-        <p class="success">Operation completed successfully!</p>
-        <% } %>
-    </main>
-</div>
 </body>
 </html>

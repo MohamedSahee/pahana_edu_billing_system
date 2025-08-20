@@ -1,76 +1,46 @@
 package servlet;
 
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import model.User;
 import dao.UserDAO;
+import model.User;
 
-public class UserManagementServlet extends HttpServlet {
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        User user = (User) session.getAttribute("user");
+import javax.servlet.*;
+import javax.servlet.http.*;
+import java.io.IOException;
 
-        // Check if user is logged in and is an admin
-        if (user == null || !"admin".equals(user.getRole())) {
-            response.sendRedirect("index.jsp");
-            return;
-        }
+public class ManageUsersServlet extends HttpServlet {
 
-        UserDAO userDAO = new UserDAOImpl();
-        java.util.List<User> users = userDAO.getAllUsers();
+    private UserDAO userDAO;
 
-        request.setAttribute("users", users);
-        request.getRequestDispatcher("manageUsers.jsp").forward(request, response);
+    @Override
+    public void init() {
+        userDAO = new UserDAO();
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        User currentUser = (User) session.getAttribute("user");
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setAttribute("users", userDAO.getAllUsers());
+        RequestDispatcher dispatcher = request.getRequestDispatcher("manageUsers.jsp");
+        dispatcher.forward(request, response);
+    }
 
-        // Check if user is logged in and is an admin
-        if (currentUser == null || !"admin".equals(currentUser.getRole())) {
-            response.sendRedirect("index.jsp");
-            return;
-        }
-
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String action = request.getParameter("action");
-        UserDAO userDAO = new UserDAOImpl();
 
         if ("add".equals(action)) {
             String username = request.getParameter("username");
             String password = request.getParameter("password");
             String role = request.getParameter("role");
-
-            User user = new User();
-            user.setUsername(username);
-            user.setPassword(password);
-            user.setRole(role);
-
-            userDAO.addUser(user);
+            userDAO.addUser(new User(username, password, role));
         } else if ("update".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
             String username = request.getParameter("username");
-            String password = request.getParameter("password");
             String role = request.getParameter("role");
-
-            User user = new User();
-            user.setId(id);
-            user.setUsername(username);
-            user.setPassword(password);
-            user.setRole(role);
-
-            userDAO.updateUser(user);
+            userDAO.updateUser(new User(id, username, null, role));
         } else if ("delete".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
             userDAO.deleteUser(id);
         }
-
-        response.sendRedirect("UserManagementServlet");
+        response.sendRedirect("ManageUsersServlet");
     }
 }

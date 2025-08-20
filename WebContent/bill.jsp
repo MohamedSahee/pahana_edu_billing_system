@@ -1,9 +1,15 @@
 <%@ page import="dao.ItemDAO,dao.CustomerDAO,model.Item,model.Customer,java.util.List" %>
+<%@ page import="java.sql.SQLException" %>
 <%
     if (session.getAttribute("user") == null) { response.sendRedirect("index.jsp"); return; }
     ItemDAO itemDAO = new ItemDAO();
     CustomerDAO custDAO = new CustomerDAO();
-    List<Item> items = itemDAO.all();
+    List<Item> items = null;
+    try {
+        items = itemDAO.all();
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
     List<Customer> customers = custDAO.all();
 %>
 <!DOCTYPE html>
@@ -30,7 +36,9 @@
             <tr>
                 <td><%= i.getName() %></td>
                 <td><%= i.getPrice() %></td>
-                <td><input type="number" name="item_<%= i.getId() %>" min="0" value="0"/></td>
+                <td><label>
+                    <input type="number" name="item_<%= i.getId() %>" min="0" value="0"/>
+                </label></td>
             </tr>
             <% } %>
         </table>
